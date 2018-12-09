@@ -1,0 +1,258 @@
+---
+Title: "Crime2017"
+author: "Fionnuala McPeake"
+date: "December 3, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(readxl)
+library(httr)
+library(tidyverse)
+library(XML)
+crime1 <- read_csv("crime1.csv")
+crime1 <- crime1[crime1$lat != "NA" & crime1$long != "NA", ] #get rid of rows with "NA"" for lat or long
+crime1 <- crime1[complete.cases(crime1[ , 3:5]),]
+crime1 <- subset(crime1, select = c("OFFENSE_CODE_GROUP", "OFFENSE_DESCRIPTION", "YEAR", "lat", "long")) #Drop variables that I don't need
+crime2017 <- filter(crime1, YEAR == 2017) #make data frame for 2018 
+```
+
+## R Markdown
+
+```{r cars}
+crime2017$Crime_Type <- " "
+for (i in 1:94150){
+  if(crime2017$OFFENSE_CODE_GROUP[i] == "Evading Fare" | crime2017$OFFENSE_CODE_GROUP[i] =="Ballistics"| crime2017$OFFENSE_CODE_GROUP[i] =="Other Burglary"| crime2017$OFFENSE_CODE_GROUP[i] =="Fire Related Reports"| crime2017$OFFENSE_CODE_GROUP[i] =="Commercial Burglary" | crime2017$OFFENSE_CODE_GROUP[i] == "Violations" | crime2017$OFFENSE_CODE_GROUP[i] == "Firearm Discovery" | crime2017$OFFENSE_CODE_GROUP[i] == "Assembly or Gathering Violations" | crime2017$OFFENSE_CODE_GROUP[i] == "Firearm Violations" | crime2017$OFFENSE_CODE_GROUP[i] == "Disorderly Conduct" | crime2017$OFFENSE_CODE_GROUP[i] == "Landlord/Tenant Disputes" | crime2017$OFFENSE_CODE_GROUP[i] == "Aircraft" | crime2017$OFFENSE_CODE_GROUP[i] == "License Violation" | crime2017$OFFENSE_CODE_GROUP[i] == "Explosives") {
+    crime2017$Crime_Type[i] = "Other"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Missing Person Reported" | crime2017$OFFENSE_CODE_GROUP[i] == "Missing Person Located"){
+    crime2017$Crime_Type[i] = "Missing Person"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Towed" | crime2017$OFFENSE_CODE_GROUP[i] == "Auto Theft Recovery" | crime2017$OFFENSE_CODE_GROUP[i] == "License Plate Related Incidents" | crime2017$OFFENSE_CODE_GROUP[i] == "Auto Theft"){
+    crime2017$Crime_Type[i] = "Auto Vehicle"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Verbal Disputes" | crime2017$OFFENSE_CODE_GROUP[i] == "Harassment" | crime2017$OFFENSE_CODE_GROUP[i] == "Liquor Violation" | crime2017$OFFENSE_CODE_GROUP[i] ==  "Operating Under the Influence" | crime2017$OFFENSE_CODE_GROUP[i] == "Phone Call Complaints" | crime2017$OFFENSE_CODE_GROUP[i] == "Prostitution" | crime2017$OFFENSE_CODE_GROUP[i] == "Disorderly Conduct" ){
+    crime2017$Crime_Type[i] = "Domestic"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Drug Violation"){
+    crime2017$Crime_Type[i] = "Drugs"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Medical Assitance"){
+    crime2017$Crime_Type[i] = "Medical"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Vandalism" | crime2017$OFFENSE_CODE_GROUP[i] == "Property Related Damage" | crime2017$OFFENSE_CODE_GROUP[i] == "Burglary- No Property Taken" | crime2017$OFFENSE_CODE_GROUP[i] == "Larceny" | crime2017$OFFENSE_CODE_GROUP[i] == "Larceny From Motor Vehicle" | crime2017$OFFENSE_CODE_GROUP[i] == "Residental Burglary" ){
+    crime2017$Crime_Type[i] = "Nonviolent"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Aggravated Assault" | crime2017$OFFENSE_CODE_GROUP[i] == "Arson" | crime2017$OFFENSE_CODE_GROUP[i] == "Offenses Against Child/Family" | crime2017$OFFENSE_CODE_GROUP[i] == "Criminal Harassment" | crime2017$OFFENSE_CODE_GROUP[i] == "Biological Threat" | crime2017$OFFENSE_CODE_GROUP[i] == "HUMAN TRAFFICKING" | crime2017$OFFENSE_CODE_GROUP[i] == "Restraining Order Violation" | crime2017$OFFENSE_CODE_GROUP[i] == "Robbery" | crime2017$OFFENSE_CODE_GROUP[i] == "Home Invastion" | crime2017$OFFENSE_CODE_GROUP[i] == "Homicide" | crime2017$OFFENSE_CODE_GROUP[i] == "Manslaughter" | crime2017$OFFENSE_CODE_GROUP[i] == "HUMAN TRAFFICKING- INVOLUNRARY SERVITUDE") {
+    crime2017$Crime_Type [i] = "Violent"
+  }
+    else if (crime2017$OFFENSE_CODE_GROUP[i] == "Confidence Games" | crime2017$OFFENSE_CODE_GROUP[i] == "Gambling" | crime2017$OFFENSE_CODE_GROUP[i] == "Fraud" | crime2017$OFFENSE_CODE_GROUP[i] == "Embezzlement" | crime2017$OFFENSE_CODE_GROUP[i] == "Counterfiting" ){
+      crime2017$Crime_Type[i] = "Financial"
+    }
+  else if(crime2017$OFFENSE_CODE_GROUP[i] == "Other" & crime2017$OFFENSE_DESCRIPTION[i] == "THREATS TO DO BODILY HARM" | crime2017$OFFENSE_DESCRIPTION[i] == "INTIMIDATING WITNESS" | crime2017$OFFENSE_DESCRIPTION[i] == "KIDNAPPING/CUSTODIAL KIDNAPPING" | crime2017$OFFENSE_DESCRIPTION[i] == "ANIMAL ABUSE" | crime2017$OFFENSE_DESCRIPTION[i] == "ABDUCTION - INTICING" | crime2017$OFFENSE_DESCRIPTION[i] == "KIDNAPPING - ENTICING OR ATTEMPTED" | crime2017$OFFENSE_DESCRIPTION[i] == "CUSTODIAL KIDNAPPING"){
+    crime2017$Crime_Type[i] = "Violent"
+  }
+  else if(crime2017$OFFENSE_CODE_GROUP[i] == "Other" & crime2017$OFFENSE_DESCRIPTION[i] == "TRESPASSING"){
+    crime2017$Crime_Type[i] = "Nonviolent"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Other" & crime2017$OFFENSE_DESCRIPTION[i] == "VAL - VIOLATION OF AUTO LAW - OTHER" | crime2017$OFFENSE_DESCRIPTION[i] == "OTHER OFFENSE" | crime2017$OFFENSE_DESCRIPTION[i] == "DANGEROUS OR HAZARDOUS CONDITION" | crime2017$OFFENSE_DESCRIPTION[i] == "OBSCENE MATERIALS - PORNOGRAPHY" | crime2017$OFFENSE_DESCRIPTION[i] == "POSSESSION OF BURGLARIOUS TOOLS" | crime2017$OFFENSE_DESCRIPTION[i] == "VIOLATION - CITY ORDINANCE" | crime2017$OFFENSE_DESCRIPTION[i] == "WEAPON - OTHER - OTHER VIOLATION" | crime2017$OFFENSE_DESCRIPTION[i] == "PROPERTY - CONCEALING LEASED" | crime2017$OFFENSE_DESCRIPTION[i] == "VIOLATION - CITY ORDINANCE CONSTRUCTION PERMIT" | crime2017$OFFENSE_DESCRIPTION[i] =="VIOLATION - HAWKER AND PEDDLER"){
+    crime2017$Crime_Type[i] = "Other"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Other" & crime2017$OFFENSE_DESCRIPTION[i] == "REPORT AFFECTING OTHER DEPTS." | crime2017$OFFENSE_DESCRIPTION[i] == "INVESTIGATION FOR ANOTHER AGENCY"){
+    crime2017$Crime_Type[i] = "Police Work"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Other" & crime2017$OFFENSE_DESCRIPTION[i] == "EXTORTION OR BLACKMAIL"){
+     crime2017$Crime_Type[i] = "Domestic"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Simple Assault" & crime2017$OFFENSE_DESCRIPTION[i] == "ASSAULT SIMPLE - BATTERY" | crime2017$OFFENSE_DESCRIPTION[i] == "A&B ON POLICE OFFICER" | crime2017$OFFENSE_DESCRIPTION[i] == "ASSAULT & BATTERY"){
+    crime2017$Crime_Type[i] = "Violent"
+  }
+  else if (crime2017$OFFENSE_CODE_GROUP[i] == "Simple Assault" & crime2017$OFFENSE_DESCRIPTION[i] == "ASSAULT - SIMPLE"){
+    crime2017$Crime_Type[i] = "Nonviolent"
+  }
+  else{
+    crime2017$Crime_Type[i] = "Police Work"
+  }
+}
+
+```
+
+## Select Crime Type
+
+```{r pressure, echo=FALSE}
+library(tidyverse)
+Violent2017 <- filter(crime2017, Crime_Type == "Violent" | Crime_Type == "Drugs" | Crime_Type == "Domestic")
+```
+
+## Match Longitude and Latitude with Census Block Number
+```{r}
+Violent2017 <- Violent2017[complete.cases(Violent2017[ , 3:5]),]
+
+result17 <- list()
+tract17 <- list()
+try17 <- list()
+Violent2017$block <- 0
+
+lat17 <- as.numeric(Violent2017$lat)
+lon17 <- as.numeric(Violent2017$long)
+for(i in 1:10708){
+
+api17 <- paste0("https://geo.fcc.gov/api/census/block/find?latitude=",lat17[i],"&longitude=",lon17[i],"&showall=true&format=xml")
+#print(api1)
+
+## call the api and get the result
+result17[[i]] <- GET(api17, content_type(".xml"))
+#print(result)
+
+## convert the hex to text
+xr17 <- content(result17[[i]], "text")
+
+## parse the xml
+xr.17 <- xmlParse(xr17[[1]]) 
+
+
+## convert the xml into a list
+xr.list17 <- xmlToList(node = xr.17)
+
+
+## the FIPS in the "Block" list item
+fips17 <- xr.list17$Block
+
+
+## you can have the fips as numberic or character
+as.character(fips17)
+
+# sort out the parts of the block ID
+fips17.1 <- fips17[1] 
+as.data.frame(fips17.1)
+splintered17 <- t(sapply(fips17.1, function(x) substring(x, first = c(1,6,12), last = c(5,11,15)))) 
+
+cbind(splintered17) -> bound17
+
+bound17[[2]] -> tract17 #The second item is the census tract number
+as.integer(tract17)
+try17 <- gsub("(?<![0-9])0+", "", tract17, perl = TRUE)
+try17 <- as.numeric(as.character(try17))
+
+try17 <- try17/100
+try17 -> Violent2017$block[i]
+}
+
+```
+
+
+#Filter for the blocks you want
+```{r}
+selectedv2017 <- filter(Violent2017, block == 818 | block == 907 | block == 612| block == 1207 |  block == 503 | block == 108.02 | block == 108.01 | block == 107.02 | block == 817 | block == 8.02 | block == 8.03 | block == 601.01 | block == 602 | block == 605.01| block == 4.02 | block == 4.01)
+```
+
+## Match neighborhood to city block
+```{r}
+selectedv2017$city = " "
+
+selectedv2017$city <- ifelse((selectedv2017$block == 818), "Roxbury818", selectedv2017$city)
+
+selectedv2017$city <- ifelse((selectedv2017$block == 817), "Roxbury817", selectedv2017$city)
+
+selectedv2017$city <- ifelse((selectedv2017$block == 108.02 | selectedv2017$block == 108.01 | selectedv2017$block == 107.02), "Back Bay", selectedv2017$city)
+
+selectedv2017$city <- ifelse((selectedv2017$block == 907), "Dorchester", selectedv2017$city)
+
+selectedv2017$city <- ifelse((selectedv2017$block == 612), "Boston612", selectedv2017$city)
+
+selectedv2017$city <- ifelse((selectedv2017$block == 1207), "Jamaica Plain", selectedv2017$city)
+
+selectedv2017$city <- ifelse((selectedv2017$block == 503), "Boston503", selectedv2017$city)
+
+selectedv2017$city <- ifelse((selectedv2017$block == 601.01 | selectedv2017$block == 602 | selectedv2017$block == 605.01), "East Boston", selectedv2017$city)
+
+selectedv2017$city <- ifelse((selectedv2017$block == 8.02 | selectedv2017$block == 8.03), "Allston", selectedv2017$city)
+
+selectedv2017$city <- ifelse((selectedv2017$block == 4.01 | selectedv2017$block == 4.02), "Chestnut Hill", selectedv2017$city)
+
+```
+
+
+#Load median house values by neighborhood for 2017
+```{r}
+selectedv2017$Med_House_Value_17 <- 0
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "Roxbury818", 432309, selectedv2017$Med_House_Value_17)
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "Dorchester", 452725, selectedv2017$Med_House_Value_17)
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "Boston612", 658485, selectedv2017$Med_House_Value_17)
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "Jamaica Plain", 577081, selectedv2017$Med_House_Value_17)
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "Boston503", 429069, selectedv2017$Med_House_Value_17)
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "East Boston", 656485, selectedv2017$Med_House_Value_17)
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "Back Bay", 1100193, selectedv2017$Med_House_Value_17)
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "Roxbury817", 409245, selectedv2017$Med_House_Value_17)
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "Allston", 466603, selectedv2017$Med_House_Value_17)
+
+selectedv2017$Med_House_Value_17 <- ifelse(selectedv2017$city == "Chestnut Hill", 429700, selectedv2017$Med_House_Value_17)
+```
+
+# See how many occurences there are per neighborhood
+
+Boston103 had too few occurences, excluded from model
+```{r}
+library(lme4)
+sum(selectedv2017$city == "Allston") #85
+sum(selectedv2017$city == "Roxbury817") #179
+sum(selectedv2017$city == "Back Bay") #112
+sum(selectedv2017$city == "East Boston")#65
+sum(selectedv2017$city == "Boston503") #35
+sum(selectedv2017$city == "Jamaica Plain") #17
+sum(selectedv2017$city == "Boston612") #63
+sum(selectedv2017$city == "Dorchester") #113
+sum(selectedv2017$city == "Roxbury818") #96
+sum(selectedv2017$city == "Chestnut Hill") #32
+```
+
+#Plots
+```{r}
+ggplot(data = selectedv2017) +
+  aes(x = city) +
+  geom_bar(fill = "#0c4c8a") +
+  labs(title = "Crime by City 2017",
+    x = "City",
+    y = "Number of Occurences") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+ggplot(data = selectedv2017) +
+  aes(x = city, weight = Med_House_Value_17) +
+  geom_bar(fill = "#0c4c8a") +
+  labs(title = "2017 Med. House Value",
+    x = "City",
+    y = "Median Price") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+```{r}
+library(lme4)
+library(readxl)
+X2017Short <- read_excel("2017Short.xlsx")
+
+# Complete pooling
+comppool <- lm(Occ_Violent ~ Med_House_Value, data = X2017Short)
+summary(comppool)
+
+# No pooling
+nopool <- lm(Occ_Violent ~ Med_House_Value + factor(City) -1, data = X2017Short)
+summary(nopool)
+
+# Varying intercept no predictors
+varinop <- lmer(Occ_Violent ~ 1 + (1|City), data = X2017Short) 
+
+```
